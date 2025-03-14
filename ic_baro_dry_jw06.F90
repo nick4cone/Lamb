@@ -24,7 +24,7 @@ module ic_baro_dry_jw06
        T0                     = 300._r8,      & ! horizontal mean T at the surface in K
        p00                    = 1.e5_r8,      & ! reference surface pressure in Pa
        mountain_halfwidth     = 1._r8/30._r8, & ! halfwidth of the Gaussian mountain without Earth's radius=1 (a/10 with a=1) 
-       mountain_amplitude     = 50._r8,       & ! pressure perturbation amplitude of 50 hPa
+       mountain_amplitude     = 5000._r8,       & ! pressure perturbation amplitude of 50 hPa
        mountain_longitude     = 180._r8,      & ! mountain longitudinal center position in degrees, 180E
        mountain_latitude      = 0._r8,        & ! mountain latitudinal center position in degrees, 0N (equator)
        gamma                  = 0.0065_r8       ! temperature lapse rate K/m
@@ -131,7 +131,7 @@ contains
        where(mask_use)
     !    great circle distance without the Earth's radius (unit circle)
          r(:) = acos( sin(mountain_lat)*sin(latvals(:)) + cos(mountain_lat)*cos(latvals(:))*cos(lonvals(:)-mountain_lon))
-         surface_height(:) = p00 + mountain_amplitude*exp(- (r(:)/mountain_halfwidth)**2._r8 )
+         surface_pressure(:) = p00 + mountain_amplitude*exp(- (r(:)/mountain_halfwidth)**2._r8 )
        end where
     endif
 
