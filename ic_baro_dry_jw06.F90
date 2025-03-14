@@ -1,7 +1,7 @@
 module ic_baro_dry_jw06
   !-----------------------------------------------------------------------
   !
-  ! Purpose: Set idealized initial conditions for the DCMIP-2012 test 2-0-0 (acid test with a Gaussian mountain)
+  ! Purpose: Set idealized initial conditions for a Lamb Wave (Gaussian pressure perturbation)
 
   !
   !-----------------------------------------------------------------------
@@ -23,8 +23,8 @@ module ic_baro_dry_jw06
   real(r8), parameter, private ::             &
        T0                     = 300._r8,      & ! horizontal mean T at the surface in K
        p00                    = 1.e5_r8,      & ! reference surface pressure in Pa
-       mountain_halfwidth     = 1._r8/10._r8, & ! halfwidth of the Gaussian mountain without Earth's radius=1 (a/10 with a=1) 
-       mountain_amplitude     = 2000._r8,     & ! mountain amplitude of 2000 m
+       mountain_halfwidth     = 1._r8/30._r8, & ! halfwidth of the Gaussian mountain without Earth's radius=1 (a/10 with a=1) 
+       mountain_amplitude     = 50._r8,       & ! pressure perturbation amplitude of 50 hPa
        mountain_longitude     = 180._r8,      & ! mountain longitudinal center position in degrees, 180E
        mountain_latitude      = 0._r8,        & ! mountain latitudinal center position in degrees, 0N (equator)
        gamma                  = 0.0065_r8       ! temperature lapse rate K/m
@@ -74,7 +74,7 @@ contains
     character(len=*), parameter       :: subname = 'BC_DRY_JW06_SET_IC'
     real(r8)                          :: r(size(latvals))         ! great circle distance (unit circle)
     real(r8)                          :: surface_pressure(size(latvals))
-    real(r8)                          :: surface_height(size(latvals))
+    ! real(r8)                          :: surface_height(size(latvals))
     real(r8)                          :: mountain_lon, mountain_lat
     real(r8)                          :: mountain_radius, mountain_oscillation_width
     logical                           :: mountain_gaussian
@@ -131,25 +131,8 @@ contains
        where(mask_use)
     !    great circle distance without the Earth's radius (unit circle)
          r(:) = acos( sin(mountain_lat)*sin(latvals(:)) + cos(mountain_lat)*cos(latvals(:))*cos(lonvals(:)-mountain_lon))
-         surface_height(:) = mountain_amplitude*exp(- (r(:)/mountain_halfwidth)**2._r8 )
-    !    surface pressure (in hydrostatic balance) 
-         surface_pressure(:) = p00 * (1._r8 - gamma/T0*surface_height(:))**exponent
+         surface_height(:) = p00 + mountain_amplitude*exp(- (r(:)/mountain_halfwidth)**2._r8 )
        end where
-    else 
-    ! oscillatory Schaer-type mountain used in DCMIP-2012 test 2-0-0
-       do i = 1, size(latvals,1)
-         if (mask_use(i)) then
-    !       great circle distance without the Earth's radius (unit circle)
-            r(i) = acos( sin(mountain_lat)*sin(latvals(i)) + cos(mountain_lat)*cos(latvals(i))*cos(lonvals(i)-mountain_lon))
-            if (r(i) .lt. mountain_radius) then
-              surface_height(i) = (mountain_amplitude/2._r8)*(1._r8+cos(pi*r(i)/mountain_radius))*cos(pi*r(i)/mountain_oscillation_width)**2._r8
-            else
-              surface_height(i) = 0._r8
-            endif
-    !       surface pressure (in hydrostatic balance) 
-            surface_pressure(i) = p00 * (1._r8 - gamma/T0*surface_height(i))**exponent
-         endif
-       end do
     endif
 
     !*******************************
@@ -158,10 +141,11 @@ contains
     !
     !*******************************
     !
-     if (present(PHIS)) then
+    if (present(PHIS)) then
       where(mask_use)
-      ! surface geopotential: mountain height times gravity 
-        PHIS(:) = gravit*surface_height(:)
+              PHIS(:) = 0.0_r8
+    !  ! surface geopotential: mountain height times gravity 
+    !    PHIS(:) = gravit*surface_height(:)
       end where
       if(masterproc .and. verbose_use) then
         write(iulog,*) '          PHIS initialized by "',subname,'"'
