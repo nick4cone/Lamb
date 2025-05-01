@@ -1,0 +1,15 @@
+#!/bin/sh
+CASENAME=CAM_6_4_025_20240829_SEne30_L30_400m_fadiab_lamb_isothermal_2_275K
+
+~/CAM_6_4_025_20240829/cime/scripts/create_newcase --compset FADIAB --res ne30_ne30_mg16 --pecount 128 --case ~/CAM_6_4_025_20240829_cases/$CASENAME --run-unsupported --project UMIC0104
+cd ~/CAM_6_4_025_20240829_cases/$CASENAME
+
+./xmlchange DEBUG=FALSE
+./xmlchange DOUT_S=FALSE
+./xmlchange STOP_OPTION=ndays,STOP_N=5
+./xmlquery CAM_CONFIG_OPTS
+./xmlchange --file env_build.xml --id CAM_CONFIG_OPTS --val "--phys adiabatic --analytic_ic"
+./xmlquery CAM_CONFIG_OPTS
+./xmlchange JOB_WALLCLOCK_TIME=01:00:00
+./pelayout
+./case.setup
